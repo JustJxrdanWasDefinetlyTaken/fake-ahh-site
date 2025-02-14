@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            overflow-x:hidden;
+        }
+        nav a {
+            margin: 0 15px;
+            color: #BB86FC;
+            text-decoration: none;
+        }
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #1E1E1E;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+        #chat-container {
+            max-height:auto;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #BB86FC;
+            padding: 10px;
+            background: #1E1E1E;
+            border-radius: 5px;
+            text-align: left;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user {
+            background: #BB86FC;
+            color: black;
+            text-align: right;
+        }
+        .ai {
+            font-variant: small-caps;
+            font-size: 20px;
+            font-variant-caps:small-caps;
+            background: #333;
+            text-justify: auto;
+            justify-content: center;
+            align-items: center;
+        }
+        input {
+            background: #333;
+            color: white;
+            border: 1px solid #BB86FC;
+            width:1000px;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            width: calc(100% - 22px);
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #BB86FC;
+            color: black;
+            cursor: pointer;
+        }
+        .controls {
+            display: flex;
+            flex-wrap:wrap;
+            justify-content: space-between;
+            justify-content: center;
+            align-items: center;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #1E1E1E;
+            color: white;
+            margin-top: 20px;
+            position:absolute;
+            bottom:0;
+            right:0;
+            left:0;
+            width:98.7%;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Tutor</h1>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="math.html">Math</a>
+        <a href="reading.html">Reading</a>
+    </nav>
+
+    <div class="chat-container">
+        <h2>Ask Jack about Math or Reading!</h2>
+        <div id="chat-container"></div>
+        <div class="controls">
+            <input type="text" id="user-input" placeholder="Type your question...">
+            <br>
+            <br>
+            <button id="send-button">Ask</button>
+            <br>
+            <button id="new-chat-button">New Chat</button>
+        </div>
+    </div>
+    <footer>
+        &copy; 2025 TutorBud. All rights reserved.
+    </footer>
+    <script>
+        const chatContainer = document.querySelector('#chat-container');
+const userInput = document.querySelector('#user-input');
+const sendButton = document.querySelector('#send-button');
+const newChatButton = document.querySelector('#new-chat-button');
+
+const apiKey = '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';
+
+// Use a unique key for Jack
+const storageKey = "conversationHistory_Jack";  
+let conversationHistory = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+const displayMessages = () => {
+    chatContainer.innerHTML = '';
+    conversationHistory.forEach(msg => {
+        createMessageElement(msg.content, msg.sender);
+    });
+};
+
+const createMessageElement = (content, sender) => {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', sender);
+    messageElement.innerHTML = `<p>${content}</p>`;
+    chatContainer.appendChild(messageElement);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+};
+
+const saveConversation = () => {
+    localStorage.setItem(storageKey, JSON.stringify(conversationHistory));
+};
+
+const fetchAPIResponse = async (message) => {
+    const apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+    const payload = {
+        model: "mixtral-8x7b-32768",
+        messages: [
+            { role: "system", content: "You are Jack, you are Jaxi's twin brother. You are a helpful AI tutor that helps with math and reading. You don't give out answers, you break it down and explain it, without giving out the answer, only for 6th grade and above reading and math questions though, don't mention it though." },
+            { role: "user", content: message }
+        ],
+        temperature: 0.9,
+        max_tokens: 1024,
+        stream: false
+    };
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return await response.json();
+};
+
+const handleSendMessage = async () => {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    createMessageElement(`You: ${message}`, 'user');
+    userInput.value = '';
+
+    conversationHistory.push({ content: `You: ${message}`, sender: 'user' });
+    saveConversation();
+
+    try {
+        const apiResponse = await fetchAPIResponse(message);
+        const aiReply = `Jack: ${apiResponse.choices[0].message.content}`;
+        createMessageElement(aiReply, 'ai');
+
+        conversationHistory.push({ content: aiReply, sender: 'ai' });
+        saveConversation();
+    } catch (error) {
+        createMessageElement(`Failed to get AI response. Error details: ${error.message}`, 'error');
+    }
+};
+
+sendButton.addEventListener('click', handleSendMessage);
+userInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        handleSendMessage();
+    }
+});
+
+newChatButton.addEventListener('click', () => {
+    conversationHistory = [];
+    saveConversation();
+    chatContainer.innerHTML = '';
+});
+
+displayMessages();
+    </script>
+</body>
+</html>

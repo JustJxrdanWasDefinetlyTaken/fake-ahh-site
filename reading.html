@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading - TutorBud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            overflow-x:hidden;
+        }
+        button {
+            width: calc(20% - 22px);
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: #BB86FC;
+            color: black;
+            cursor: pointer;
+        }
+        nav a {
+            margin: 0 15px;
+            color: #BB86FC;
+            text-decoration: none;
+        }
+        .quiz-container {
+            margin-top: 20px;
+        }
+        .passage {
+            background-color: #1E1E1E;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background: #1E1E1E;
+            color: white;
+            margin-top: 20px;
+            position:absolute;
+            bottom:0;
+            right:0;
+            left:0;
+            width:98.7%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reading Comprehension Quiz</h1>
+    <a href="studybot.html" style="            margin: 0 15px;
+    color: #BB86FC;
+    text-decoration: none;">Confused? Use the studybot to help you understand!</a>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="math.html">Math</a>
+        <a href="jaxi.html">Tutor Bot</a>
+    </nav>
+
+    <div class="quiz-container">
+        <div class="passage" id="passage"></div>
+        <p id="question"></p>
+        <button onclick="checkReadingAnswer(0)" id="choiceA"></button>
+        <button onclick="checkReadingAnswer(1)" id="choiceB"></button>
+        <button onclick="checkReadingAnswer(2)" id="choiceC"></button>
+        <p id="reading-feedback"></p>
+        <p id="score"></p>
+    </div>
+    <footer>
+        &copy; 2025 TutorBud. All rights reserved.
+    </footer>
+    <script>
+        const questions = [
+            { 
+                passage: "The fox was clever and knew how to trick the farmer. Each night, it snuck into the henhouse and stole a chicken. The farmer tried everything, but the fox was always one step ahead.",
+                question: "What is the best theme for this passage?",
+                choices: ["Honesty is the best policy", "Cleverness can outsmart strength", "Farming is difficult"],
+                answer: 1,
+                hint: "Think about the fox's ability to outsmart the farmer."
+            },
+            { 
+                passage: "Maria walked into the library, her eyes scanning the shelves. She loved the smell of old books and the quiet hum of people reading. Today, she was looking for a book about space.",
+                question: "What can we infer about Maria?",
+                choices: ["She dislikes books", "She enjoys reading", "She is afraid of libraries"],
+                answer: 1,
+                hint: "Think about how she feels in the library."
+            },
+            { 
+                passage: "Tom's heart raced as he climbed higher. The mountain was steep, and the wind howled in his ears. He had trained for months for this moment.",
+                question: "What is the mood of this passage?",
+                choices: ["Calm and peaceful", "Exciting and tense", "Boring and uneventful"],
+                answer: 1,
+                hint: "Think about the descriptions of Tom's actions and feelings."
+            },
+            { 
+                passage: "The scientist carefully recorded the data from the experiment. She repeated the test three times to make sure her results were accurate.",
+                question: "What is the scientist demonstrating?",
+                choices: ["Creativity", "Patience and accuracy", "Carelessness"],
+                answer: 1,
+                hint: "Think about why she repeats the test multiple times."
+            },
+            { 
+                passage: "Lena’s best friend moved away last summer. They used to play together every day, and now Lena felt lonely. She wrote letters to her friend, hoping to stay in touch.",
+                question: "What is the main idea of this passage?",
+                choices: ["Lena likes to write", "Lena misses her friend", "Lena is learning a new hobby"],
+                answer: 1,
+                hint: "Think about why Lena writes letters."
+            },
+            { 
+                passage: "The old bridge creaked under the weight of the truck. It had been built decades ago and needed repairs. The driver held his breath as he crossed.",
+                question: "What does the word 'creaked' suggest?",
+                choices: ["The bridge is strong", "The bridge is old and weak", "The bridge is brand new"],
+                answer: 1,
+                hint: "Think about what a creaking sound usually means."
+            },
+            { 
+                passage: "Jessica watched the storm clouds roll in. She ran inside just as the first raindrops fell. Lightning flashed in the distance.",
+                question: "What type of conflict is present in the passage?",
+                choices: ["Person vs. Nature", "Person vs. Self", "Person vs. Society"],
+                answer: 0,
+                hint: "Think about what Jessica is struggling against."
+            },
+            { 
+                passage: "David carefully placed the last block on the tower. His hands shook as he stepped back. The tower wobbled but stayed standing.",
+                question: "Which word best describes how David feels?",
+                choices: ["Bored", "Nervous", "Angry"],
+                answer: 1,
+                hint: "Think about his reaction as he builds the tower."
+            },
+            { 
+                passage: "The king ruled with kindness, always listening to his people. He believed a happy kingdom was a strong kingdom.",
+                question: "What is the best lesson from this passage?",
+                choices: ["Rulers should be kind", "Kings should be feared", "Money is more important than kindness"],
+                answer: 0,
+                hint: "Think about what the king values most."
+            },
+            { 
+                passage: "Olivia woke up late and rushed to school. She forgot her homework and didn’t have time for breakfast. By the time she arrived, she was already in trouble.",
+                question: "What is the cause of Olivia's problem?",
+                choices: ["She forgot her homework", "She woke up late", "She didn't eat breakfast"],
+                answer: 1,
+                hint: "Think about what started her bad day."
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let attempts = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            if (currentQuestion < questions.length) {
+                document.getElementById("passage").textContent = questions[currentQuestion].passage;
+                document.getElementById("question").textContent = questions[currentQuestion].question;
+                document.getElementById("choiceA").textContent = questions[currentQuestion].choices[0];
+                document.getElementById("choiceB").textContent = questions[currentQuestion].choices[1];
+                document.getElementById("choiceC").textContent = questions[currentQuestion].choices[2];
+                document.getElementById("reading-feedback").textContent = "";
+            } else {
+                document.getElementById("passage").textContent = "";
+                document.getElementById("question").textContent = "Quiz Complete!";
+                document.getElementById("reading-feedback").textContent = `Final Score: ${score}/10`;
+            }
+        }
+
+        function checkReadingAnswer(choice) {
+            if (choice === questions[currentQuestion].answer) {
+                document.getElementById("reading-feedback").textContent = "Correct! 🎉";
+                document.getElementById("reading-feedback").style.color = "green";
+                score++;
+                currentQuestion++;
+                attempts = 0;
+                setTimeout(loadQuestion, 1000);
+            } else {
+                attempts++;
+                if (attempts === 1) {
+                    document.getElementById("reading-feedback").textContent = `Incorrect. Hint: ${questions[currentQuestion].hint}`;
+                    document.getElementById("reading-feedback").style.color = "orange";
+                } else {
+                    document.getElementById("reading-feedback").textContent = `Incorrect. The correct answer is: ${questions[currentQuestion].choices[questions[currentQuestion].answer]}`;
+                    document.getElementById("reading-feedback").style.color = "red";
+                    currentQuestion++;
+                    attempts = 0;
+                    setTimeout(loadQuestion, 1500);
+                }
+            }
+            document.getElementById("score").textContent = `Score: ${score}/10`;
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
